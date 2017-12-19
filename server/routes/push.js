@@ -90,6 +90,7 @@ router.get('/special/:user&:title&:content',function(req,res,next){
         body: content,
         data: { withSome: content },
       })
+      continue;
     }
     }
   let chunks = expo.chunkPushNotifications(messages);
