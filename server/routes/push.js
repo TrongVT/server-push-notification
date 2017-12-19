@@ -70,7 +70,7 @@ router.get('/:tokenUserID', function (req, res, next) {
   res.end()
 });
 //push to only user
-router.get('/special/:user:&:title:&content',function(req,res,next){
+router.get('/special/:user&:title&:content',function(req,res,next){
   let expo=new Expo();
   let message=[];
   let user=req.params.user;
