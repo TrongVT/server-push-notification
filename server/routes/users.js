@@ -21,7 +21,7 @@ router.post('/', function(req, res, next) {
     else if(tokens.length>0){
       console.log("token regitser: "+tokens[0].user);
       for(var i=0;i<tokens.length;i++){
-        if(tokens[i].user===req.body.user && tokens[i].token===req.body.token){
+        if(tokens[i].user==req.body.user && tokens[i].token==req.body.token){
         }
         else{
           tokens.push(item);
@@ -47,7 +47,7 @@ router.get('/delete/:tokenuser/:tokenid',function(req,res,next){
     var tokenu=req.params.tokenuser;
     var tokeni=req.params.tokenid;
     for(var i=0;i<tokens.length;i++){
-      if(tokens[i].user===tokenu&&tokens[i].token===tokeni){
+      if(tokens[i].user==tokenu&&tokens[i].token==tokeni){
         tokens.splice(i,1);
         res.send("ok");
       }
