@@ -69,6 +69,39 @@ router.get('/:tokenUserID', function (req, res, next) {
   })();
   res.end()
 });
+//push to only user
+router.get('/special/:user:&:title:&content',function(req,res,next){
+  let expo=new Expo();
+  let message=[];
+  let user=req.params.user;
+  let title=req.params.title;
+  let content=req.params.content;
+//  var token2Send=null;
+  for(let item in tokens){
+    if(item.user===user){
+      messages.push({
+        to: item.token,
+        sound: 'default',
+        title:title,
+        body: content,
+        data: { withSome: 'data' },
+      })
+    }
+  }
+  let chunks = expo.chunkPushNotifications(messages);
+  
+    (async () => {
+      for (let chunk of chunks) {
+        try {
+          let receipts = await expo.sendPushNotificationsAsync(chunk);
+          console.log(receipts);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    })();
+    res.end();
+});
 router.get('/list/send2all/:title&:content',function(req,res,next){
   let expo = new Expo();
   
