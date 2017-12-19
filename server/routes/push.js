@@ -76,9 +76,13 @@ router.get('/special/:user&:title&:content',function(req,res,next){
   let user=req.params.user;
   let title=req.params.title;
   let content=req.params.content;
-//  var token2Send=null;
-  for(let item in tokens){
-    if(item.user===user){
+  var token2Send=[];
+  for (let item of tokens) {
+    if (!Expo.isExpoPushToken(item.token)) {
+    console.error(`Push token ${item.token} is not a valid Expo push token`);
+    continue;
+    }
+    if(item.user==user){
       messages.push({
         to: item.token,
         sound: 'default',
@@ -87,14 +91,12 @@ router.get('/special/:user&:title&:content',function(req,res,next){
         data: { withSome: 'data' },
       })
     }
-  }
+    }
   let chunks = expo.chunkPushNotifications(messages);
-  
     (async () => {
       for (let chunk of chunks) {
         try {
           let receipts = await expo.sendPushNotificationsAsync(chunk);
-          console.log(receipts);
         } catch (error) {
           console.error(error);
         }
