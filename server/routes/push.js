@@ -88,7 +88,7 @@ router.get('/special/:user&:title&:content',function(req,res,next){
         sound: 'default',
         title:title,
         body: content,
-        data: { withSome: 'data' },
+        data: { withSome: content },
       })
     }
     }
