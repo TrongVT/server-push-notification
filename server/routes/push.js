@@ -78,7 +78,7 @@ router.get('/special/:user&:title&:content',function(req,res,next){
   let content=req.params.content;
   var token2Send=[];
 
-  for (var item in tokens) {
+  for (var item of tokens) {
     if(item.user==user1){
       messages.push({
         to: item.token,
