@@ -78,17 +78,17 @@ router.get('/special/:user&:title&:content',function(req,res,next){
   let content=req.params.content;
   var token2Send=[];
 
-  for (var i=0;i<tokens.length;i++) {
-    if(tokens[i].user==user1){
+  for (var item in tokens) {
+    if(item.user==user1){
       messages.push({
-        to: tokens[i].token,
+        to: item.token,
         sound: 'default',
         title:title,
         body: content,
         data: { withSome: content },
       })
     }
-    }
+  }
   console.log("list:"+messages);
   let chunks = expo.chunkPushNotifications(messages);
     (async () => {
