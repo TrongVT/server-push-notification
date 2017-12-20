@@ -15,21 +15,24 @@ router.post('/', function(req, res, next) {
       token: req.body.token,
       user: req.body.user
     }
+    console.log("so token= "+tokens.length);
     if(tokens.length==0){
       tokens.push(item);
     }
-    else if(tokens.length>0){
-      console.log("token regitser: "+tokens[0].user);
+    else{
+      var kt=0;
       for(var i=0;i<tokens.length;i++){
-        if(tokens[i].user==req.body.user && tokens[i].token==req.body.token){
+        console.log(tokens[i].token);
+        if(tokens[i].token===req.body.token){
+          kt=kt+1;
         }
-        else{
-          tokens.push(item);
-        }
+      }
+      console.log("k= "+kt);
+      if(kt==0){
+        tokens.push(item);
       }
     }
    // tokens.push(item);
-
     // for(var i=0;i<tokens.length;i++){
     //   if(tokens[i].user===item.user && tokens[i].token===item.token){
     //     tokens.push({
