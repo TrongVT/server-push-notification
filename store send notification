@@ -1,0 +1,95 @@
+USE [ITS_TEST]
+GO
+/****** Object:  StoredProcedure [dbo].[sp_QAPushNotification]    Script Date: 01/11/2018 11:06:36 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER proc [dbo].[sp_QAPushNotification]
+as
+begin
+	declare @listSewing nvarchar(500)
+	declare @listUser nvarchar(500)
+	declare @flawIDTop nvarchar(50)
+	declare @errorQuantity int
+	declare @sewingName nvarchar(20)
+	
+	 declare @mycursor cursor
+	 set @mycursor =cursor fast_forward 
+	 for
+	 select distinct(groupID) from KK_Flaw_Notification
+	 open @mycursor
+	 fetch next from @mycursor
+	 into @listSewing
+	 while @@FETCH_STATUS=0
+	 begin
+	 --Code in algorithm
+	 --sewing 1:FEAV_F1H-70
+	 --get danh sach 
+	set @flawIDTop=(select top 1 fn.flawID
+					from KK_Flaw_Notification as fn inner join KK_PostContract_Notification as fpn on fn.groupGUID=fpn.PostID
+					where fn.groupID=@listSewing)
+	--get error quantity
+	set @errorQuantity=(
+						select COUNT(fn.flawID) 
+						from KK_Flaw_Notification as fn inner join KK_PostContract_Notification as fpn on fn.groupGUID=fpn.PostID
+						where groupID=@listSewing and fn.flawID=@flawIDTop
+						)
+	--Declare sewing name
+	set @sewingName=(select distinct(fn.groupID) 
+					 from KK_Flaw_Notification as fn inner join KK_PostContract_Notification as fpn on fn.groupGUID=fpn.PostID
+					 where groupID=@listSewing and fn.flawID=@flawIDTop and fn.Status=0)
+	--Get list user
+	 select @listUser=STUFF(
+			(
+			 select ','+CONVERT(nvarchar(20),fpn.userID)
+			 from KK_Flaw_Notification as fn inner join KK_PostContract_Notification as fpn on fn.groupGUID=fpn.PostID
+			 where fn.groupID=@listSewing and fn.flawID=@flawIDTop and fpn.Status='Y'
+			 FOR xml path('')
+			 )
+			 ,1
+			 ,1
+			 ,','
+	 )
+	 --have list user and list error
+	 if @errorQuantity>5
+	 begin
+	 --Error >=5 send notification ,list user:@listUser
+	 begin tran
+		 begin try
+			 --send ntification here
+			 declare @content nvarchar(300)
+			 declare @part nvarchar(max)
+			 declare @userlist nvarchar(1000)=@listUser+','
+			 declare @ind int
+			 declare @iduser nvarchar(20)
+			 DECLARE @EIND INT set @EIND = 0
+			 set @ind=CHARINDEX(',',@userlist)
+			 while(@ind!= LEN(@userlist))
+			 begin
+				SET  @EIND = ISNULL(((CHARINDEX(',', @userlist, @ind + 1)) - @ind - 1), 0)
+				print 'send to: '+Convert(nvarchar(40),substring(@userlist,(@ind+1),@EIND))
+				set @iduser=Convert(nvarchar(40),substring(@userlist,(@ind+1),@EIND))
+				set @content='You have '+convert(nvarchar(10),@errorQuantity)+' error in '+CONVERT(nvarchar(20),@listSewing)
+				exec sp_QASendNotification @iduser,'QA Erro Notification',@content
+				set @ind = ISNULL(CHARINDEX(',', @userlist, @ind + 1), 0)
+			 end
+			 --update status flaw
+			 exec sp_QAUpdateFlaw_Notification @sewingName,1
+			 print 'QA update'
+			 commit tran
+		 end try
+		 begin catch
+			 rollback tran
+		 end catch
+		  print 'Send notification >5 '+'error='+cast(@errorQuantity as nvarchar(20))+' group:'+@listUser+','
+	 end
+	 --End code
+	 fetch next from @mycursor
+	 into @listSewing
+	 end
+	 close @mycursor
+	 deallocate @mycursor
+end
+
+exec sp_QAPushNotification
